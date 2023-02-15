@@ -1,0 +1,6 @@
+requests
+matplotlib
+pandas
+font_source_sans_pro
+font_font_awesome
+inky
