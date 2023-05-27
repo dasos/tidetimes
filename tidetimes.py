@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import requests, re, json, time, argparse, sys, arrow
+import requests, re, json, time, argparse, sys, arrow, os
 
 from dotenv import load_dotenv
 
