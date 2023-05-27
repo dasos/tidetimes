@@ -1,5 +1,18 @@
 #!/usr/bin/python3
-import requests, re, json, time
+import requests, re, json, time, argparse, sys, arrow
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+parser = argparse.ArgumentParser(description='Display tide times')
+parser.add_argument('--no-image', dest='no_image', action='store_true', help="Don't try to generate an image. Just grab data and exit.")
+parser.set_defaults(no_image=False)
+
+args = parser.parse_args()
+
+
 
 today = time.strftime("%Y-%m-%d")
 
@@ -7,7 +20,7 @@ today = time.strftime("%Y-%m-%d")
 def get_data(url, regex):
     r = requests.get(url)
     result = re.search(regex, r.text)
-
+    
     return result.group(1)
 
 
@@ -20,6 +33,7 @@ all_tide_data = json.loads(
 )
 today_tide = [a for a in all_tide_data["tides"] if a["date"] == today][0]
 
+print ('today_tide', today_tide)
 
 # weather
 all_forecast_data = json.loads(
@@ -28,21 +42,45 @@ all_forecast_data = json.loads(
         r"data-state-id=forecast>([^<]+)</script>",
     )
 )
+print ('all_forecast_data', all_forecast_data)
+
 today_forecast = [
     a["summary"]["report"]
     for a in all_forecast_data["data"]["forecasts"]
     if a["summary"]["report"]["localDate"] == today
 ][0]
 
+print ('today_forecast', today_forecast)
+
 
 # sea temperature
-sea_temp = json.loads(
-    get_data(
-        "https://www.seatemperature.org/europe/united-kingdom/weymouth.htm",
-        r"<div id=\"sea-temperature\" class=\"\w*\">\s*<span>([^<]+)&deg;C",
-    )
+response = requests.get(
+  'https://api.stormglass.io/v2/weather/point',
+  params={
+    'lat': 50.695538,
+    'lng': -2.731526,
+    'params': ','.join(['waveHeight', 'waterTemperature']),
+    'start': arrow.now().replace(hour=12).floor('hour').to('UTC').timestamp(),  # Start at midday
+    'end': arrow.now().replace(hour=12).ceil('hour').to('UTC').timestamp()  
+  },
+  headers={
+    'Authorization': os.getenv('STORMGLASS_API')
+  }
 )
-sea_temp = round(sea_temp)
+stormglass_data = response.json()
+
+# request_json = "{'hours': [{'time': '2023-05-27T12:00:00+00:00', 'waterTemperature': {'meto': 15.1, 'noaa': 12.24, 'sg': 15.1}, 'waveHeight': {'dwd': 0.2, 'icon': 0.87, 'meteo': 0.73, 'meto': 0.23, 'noaa': 0.8, 'sg': 0.23}}], 'meta': {'cost': 1, 'dailyQuota': 10, 'end': '2023-05-27 12:59', 'lat': 50.695538, 'lng': -2.731526, 'params': ['waveHeight', 'waterTemperature'], 'requestCount': 4, 'start': '2023-05-27 12:00'}}".replace("\'", "\"")
+
+# stormglass_data = json.loads(request_json)
+
+sea_temp = round(stormglass_data['hours'][0]['waterTemperature']['sg']);
+
+print ('sea_temp', sea_temp)
+
+if args.no_image:
+  print ('Got data, now quitting')
+  sys.exit(0)
+
 
 
 import matplotlib.pyplot as plt
