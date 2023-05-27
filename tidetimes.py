@@ -68,6 +68,7 @@ response = requests.get(
   }
 )
 stormglass_data = response.json()
+print (stormglass_data)
 
 # request_json = "{'hours': [{'time': '2023-05-27T12:00:00+00:00', 'waterTemperature': {'meto': 15.1, 'noaa': 12.24, 'sg': 15.1}, 'waveHeight': {'dwd': 0.2, 'icon': 0.87, 'meteo': 0.73, 'meto': 0.23, 'noaa': 0.8, 'sg': 0.23}}], 'meta': {'cost': 1, 'dailyQuota': 10, 'end': '2023-05-27 12:59', 'lat': 50.695538, 'lng': -2.731526, 'params': ['waveHeight', 'waterTemperature'], 'requestCount': 4, 'start': '2023-05-27 12:00'}}".replace("\'", "\"")
 
